@@ -48,5 +48,3 @@ When running, the script logs whenever it registers a new metric or updates metr
 - Extend the script to emit traces or logs in addition to metrics.
 - Containerize the consumer for easier deployment alongside Kafka.
 
-
-# OTEL
