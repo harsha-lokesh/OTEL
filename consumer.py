@@ -17,12 +17,12 @@ resource = Resource(attributes={
 exporter = OTLPMetricExporter(
     endpoint="http://localhost:4317",
     insecure=True,
-    timeout=30  # Increase timeout to 30 seconds
+    timeout=30  
 )
 
 reader = PeriodicExportingMetricReader(
     exporter, 
-    export_interval_millis=2000  # Export every 2 seconds
+    export_interval_millis=2000  # Export every 2 seconds to collector
 )
 provider = MeterProvider(resource=resource, metric_readers=[reader])
 metrics.set_meter_provider(provider)
@@ -91,7 +91,6 @@ def process_otel_message(data):
                                 for dp in metric['gauge']['data_points']:
                                     value = dp.get('as_double') or dp.get('as_int') or 0
                                     
-                                    # Update state (will be read by callback)
                                     metrics_state[metric_name] = value
                                     print(f"  Updated: {metric_name} = {value}")
 
