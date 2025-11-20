@@ -38,6 +38,21 @@ When running, the script logs whenever it registers a new metric or updates metr
 - **Format detection**: If a message already matches the OTEL metric proto schema (`resource_metrics` / `scope_metrics`), it surfaces the contained gauge data points directly; otherwise, it treats numeric fields in the JSON payload as metrics named `kafka.<field>`.
 - **Metric export loop**: The observable gauge callbacks read the latest values from in-memory state; the OTEL SDK handles exporting them on the configured interval.
 
+## Prometheus Setup (for local visualization)
+- **Add a Prometheus exporter in your OTEL Collector config (otel-config.yaml)**:
+```bash
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8888"
+```
+- **Configure Prometheus to scrape the OTEL Collector metrics endpoint by adding to your prometheus.yml**:
+```bash
+scrape_configs:
+  - job_name: "otel-collector"
+    static_configs:
+      - targets: ["localhost:8888"]
+```
+
 ## Troubleshooting
 - Ensure the OTEL Collector is running and reachable at the configured endpoint; otherwise the exporter will log connection errors.
 - Verify your Kafka topic contains JSON payloads; non-JSON messages will raise deserialization errors.

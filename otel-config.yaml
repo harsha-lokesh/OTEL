@@ -9,6 +9,9 @@ processors:
   batch:
 
 exporters:
+  prometheus:
+    endpoint: "0.0.0.0:9999"  # Expose metrics endpoint on port 9999
+
   debug:
     verbosity: detailed
   logging:
@@ -19,4 +22,4 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, logging]
+      exporters: [prometheus, debug, logging]

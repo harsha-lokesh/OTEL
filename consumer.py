@@ -55,7 +55,7 @@ def get_observations(metric_name):
 # Create Kafka consumer
 consumer = KafkaConsumer(
     'test-topic',
-    bootstrap_servers=['10.48.17.159:9092'],
+    bootstrap_servers=['9.40.207.152:9092'], # change based on broker
     auto_offset_reset='earliest',
     enable_auto_commit=True,
     group_id='my-group',
