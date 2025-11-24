@@ -53,7 +53,7 @@ scrape_configs:
       - targets: ["localhost:8888"]
 ```
 
-<img width="1396" height="981" alt="Screenshot 2025-11-20 at 1 55 37 PM" src="https://github.com/user-attachments/assets/572c32ca-4b7f-4217-af4f-5fe188872c16" />
+<img width="3348" height="1948" alt="image" src="https://github.com/user-attachments/assets/e44a0a0c-34bc-4999-b70d-78843c3c1925" />
 
 ## Troubleshooting
 - Ensure the OTEL Collector is running and reachable at the configured endpoint; otherwise the exporter will log connection errors.
