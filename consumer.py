@@ -38,9 +38,13 @@ registered_gauges = {}
 def register_metric(metric_name, description="Auto-generated metric"):
     """Register a metric instrument once"""
     if metric_name not in registered_gauges:
+        def callback(options):
+            value = metrics_state.get(metric_name, 0)
+            return [Observation(value, {"source": "kafka"})]
+        
         gauge = meter.create_observable_gauge(
             name=metric_name,
-            callbacks=[lambda options: get_observations(metric_name)],
+            callbacks=[callback],
             description=description,
             unit="1"
         )
@@ -55,7 +59,7 @@ def get_observations(metric_name):
 # Create Kafka consumer
 consumer = KafkaConsumer(
     'test-topic',
-    bootstrap_servers=['9.40.207.152:9092'], # change based on broker
+    bootstrap_servers=['9.40.207.152:9092'],  # change based on broker
     auto_offset_reset='earliest',
     enable_auto_commit=True,
     group_id='my-group',
@@ -85,34 +89,30 @@ def process_otel_message(data):
                                 metric_name,
                                 metric.get('description', '')
                             )
-                            
-                            # Extract value from gauge
+                            # Extract value depending on metric type
                             if 'gauge' in metric and 'data_points' in metric['gauge']:
                                 for dp in metric['gauge']['data_points']:
                                     value = dp.get('as_double') or dp.get('as_int') or 0
-                                    
+                                    metrics_state[metric_name] = value
+                                    print(f"  Updated: {metric_name} = {value}")
+                            elif 'sum' in metric and 'data_points' in metric['sum']:
+                                for dp in metric['sum']['data_points']:
+                                    value = dp.get('as_double') or dp.get('as_int') or 0
                                     metrics_state[metric_name] = value
                                     print(f"  Updated: {metric_name} = {value}")
 
 def process_generic_json(data):
     """Transform generic JSON to OTEL metrics"""
     print("Detected generic JSON - transforming to metrics")
-    
     for key, value in data.items():
+        metric_name = f"kafka.{key.replace(' ', '_').lower()}"
         if isinstance(value, (int, float)):
-            metric_name = f"kafka.{key.replace(' ', '_').lower()}"
-            
-            # Register metric if not already registered
             register_metric(metric_name, f"Value from Kafka field: {key}")
-            
-            # Update state
             metrics_state[metric_name] = float(value)
             print(f"  Updated: {metric_name} = {value}")
-            
         elif isinstance(value, str):
             try:
                 num_value = float(value)
-                metric_name = f"kafka.{key.replace(' ', '_').lower()}"
                 register_metric(metric_name, f"Value from Kafka field: {key}")
                 metrics_state[metric_name] = num_value
                 print(f"  Updated: {metric_name} = {num_value} (parsed from string)")
