@@ -99,11 +99,8 @@ Key configuration points in `pipelines/opensearch-metrics.yaml`:
 Start your OpenSearch instance. If running locally:
 
 ```bash
-# Using Docker
-docker run -d -p 9200:9200 -p 9600:9600 \
-  -e "discovery.type=single-node" \
-  -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Admin@123" \
-  opensearchproject/opensearch:latest
+# Using local install
+./bin/opensearch
 
 # Or download and run OpenSearch directly
 # https://opensearch.org/docs/latest/install-and-configure/install-opensearch/index/
@@ -115,7 +112,8 @@ Run Data Prepper with the pipeline configuration. The pipeline YAML file should 
 
 **Using the binary:**
 ```bash
-./bin/data-prepper pipelines/opensearch-metrics.yaml
+cd /root/data-prepper/release/archives/linux/build/install/opensearch-data-prepper-2.14.0-SNAPSHOT-linux-x64/
+./bin/data-prepper
 ```
 
 **Using Docker:**
