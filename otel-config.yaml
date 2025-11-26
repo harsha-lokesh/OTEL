@@ -12,6 +12,10 @@ exporters:
   prometheus:
     endpoint: "0.0.0.0:9999"  # Expose metrics endpoint on port 9999
 
+  otlp/opensearch:
+    endpoint: "9.40.206.98:21890"  # Data Prepper OTLP endpoint
+    tls:
+      insecure: true    
   debug:
     verbosity: detailed
   logging:
@@ -22,4 +26,4 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [prometheus, debug, logging]
+      exporters: [prometheus, otlp/opensearch, debug, logging]

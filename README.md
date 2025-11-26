@@ -6,9 +6,13 @@ This repository now focuses exclusively on the Python-based Kafka consumer that 
 - Python 3.10+ with `pip`
 - Access to a Kafka broker (adjust host/port as needed)
 - An OTEL Collector listening for OTLP/GRPC metrics on `localhost:4317` (or configure `consumer.py` accordingly)
+- OpenSearch Data Prepper (for processing and routing metrics to OpenSearch)
+- OpenSearch instance (for storing metrics data)
 
 ## Project Layout
 - `consumer.py`: Main script that consumes Kafka messages and exports metrics via the OTEL SDK
+- `otel-config.yaml`: OTEL Collector configuration that routes metrics to Data Prepper
+- `pipelines/opensearch-metrics.yaml`: Data Prepper pipeline configuration for processing and storing metrics in OpenSearch
 - `README.md`: You are here
 
 ## Install Dependencies
@@ -54,6 +58,74 @@ scrape_configs:
 ```
 
 <img width="3348" height="1948" alt="image" src="https://github.com/user-attachments/assets/e44a0a0c-34bc-4999-b70d-78843c3c1925" />
+
+## OpenSearch Data Prepper Setup
+
+This section explains how to configure and run OpenSearch Data Prepper to receive metrics from the OTEL Collector and store them in OpenSearch.
+
+### 1. Install OpenSearch Data Prepper
+
+Download and install OpenSearch Data Prepper:
+
+```bash
+# Download Data Prepper (adjust version as needed)
+wget https://github.com/opensearch-project/data-prepper/releases/download/2.x.x/data-prepper-2.x.x-linux-x64.tar.gz
+tar -xzf data-prepper-2.x.x-linux-x64.tar.gz
+cd data-prepper-2.x.x
+```
+
+Or use Docker:
+
+```bash
+docker pull opensearchproject/data-prepper:latest
+```
+
+### 2. Configure Data Prepper Pipeline
+
+The pipeline configuration file is located at `pipelines/opensearch-metrics.yaml`. This file defines:
+
+- **Source**: OTLP metrics receiver on port `21890` (must match the OTEL Collector exporter endpoint)
+- **Processors**: OTEL metrics processor to convert metrics to OpenSearch format
+- **Sink**: OpenSearch sink that writes to the `otel-metrics` index
+
+Key configuration points in `pipelines/opensearch-metrics.yaml`:
+- `port: 21890` - Must match the endpoint in `otel-config.yaml` (`9.40.206.98:21890`)
+- `hosts: ["https://localhost:9200"]` - Update to your OpenSearch cluster endpoint
+- `index: "otel-metrics"` - Target index name in OpenSearch
+- `insecure: true` - Set to `false` in production with proper TLS certificates
+
+### 3. Start OpenSearch
+
+Start your OpenSearch instance. If running locally:
+
+```bash
+# Using Docker
+docker run -d -p 9200:9200 -p 9600:9600 \
+  -e "discovery.type=single-node" \
+  -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Admin@123" \
+  opensearchproject/opensearch:latest
+
+# Or download and run OpenSearch directly
+# https://opensearch.org/docs/latest/install-and-configure/install-opensearch/index/
+```
+
+### 4. Start Data Prepper
+
+Run Data Prepper with the pipeline configuration. The pipeline YAML file should be placed inside the `pipelines` folder:
+
+**Using the binary:**
+```bash
+./bin/data-prepper pipelines/opensearch-metrics.yaml
+```
+
+**Using Docker:**
+```bash
+docker run -d \
+  -p 21890:21890 \
+  -v $(pwd)/pipelines:/usr/share/data-prepper/pipelines \
+  opensearchproject/data-prepper:latest \
+  pipelines/opensearch-metrics.yaml
+```
 
 ## Troubleshooting
 - Ensure the OTEL Collector is running and reachable at the configured endpoint; otherwise the exporter will log connection errors.

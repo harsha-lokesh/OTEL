@@ -1,0 +1,13 @@
+pipeline:
+  source:
+    otel_metrics_source:
+      port: 21890     # Should match your OTEL Collector OTLP exporter endpoint
+
+  processors:
+    - otel_metrics    # Converts OTEL metrics to OpenSearch compatible format
+
+  sink:
+    - opensearch:
+        hosts: ["https://localhost:9200"]
+        index: "otel-metrics"
+        insecure: true       # For dev environments without TLS, remove or set false in prod
